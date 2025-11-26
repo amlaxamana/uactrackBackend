@@ -11,7 +11,8 @@ class FormRegistrationSerializer(serializers.ModelSerializer):
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['id', 'username','email', 'password', 'first_name', 'last_name', 'role', 'organization', 'office']
+        # removed "organization" from fields for now. To be added later.
+        fields = ['id', 'username','email', 'password', 'first_name', 'last_name', 'role', 'office']
         extra_kwargs = {
             'email': {'required': True},
             'password': {'write_only': True}

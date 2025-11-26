@@ -7,6 +7,9 @@ from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.authtoken.views import ObtainAuthToken
+from django.contrib.auth import authenticate
+from rest_framework.authtoken.models import Token
 from rest_framework.decorators import permission_classes
 
 @api_view(['POST'])
@@ -82,13 +85,37 @@ def student_dashboard(request):
         serializer = FormRegistrationSerializer(data=request.data)
         if serializer.is_valid():
             # Pass the validated Organization object to the save method
-            serializer.save(organization=user.organization) 
+            serializer.save(OrganizationName=user.organization)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         # ...
 
     # GET Logic:
     elif request.method == 'GET':
         # Now this filter is safe because we checked user.organization is not None
-        events = FormRegistration.objects.filter(organization=user.organization).order_by('-event_date')
+        events = FormRegistration.objects.filter(OrganizationName=user.organization).order_by('-event_date')
         # ...
+
+class EmailAuthToken(ObtainAuthToken):
+    def post(self, request, *args, **kwargs):
+        email = request.data.get('email')
+        password = request.data.get('password')
+
+        try:
+            user = User.objects.get(email=email)
+        except User.DoesNotExist:
+            return Response({"error": "Invalid email or password"}, status=400)
+
+        user = authenticate(username=user.username, password=password)
+
+        if not user:
+            return Response({"error": "Invalid email or password"}, status=400)
+
+        token, created = Token.objects.get_or_create(user=user)
+
+        return Response({
+            "token": token.key,
+            "user_id": user.id,
+            "email": user.email,
+            "role": user.role
+        })
     
