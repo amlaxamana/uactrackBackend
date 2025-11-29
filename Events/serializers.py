@@ -24,7 +24,11 @@ class UserSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         role = validated_data.get('role')
-        if role == 'admin':
+        if role == 'administrator':
             validated_data['is_staff'] = True
+            validated_data.pop('organization', None)
+
         validated_data['password'] = make_password(validated_data['password'])
+
         return super().create(validated_data)
+    
